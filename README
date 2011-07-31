@@ -1,0 +1,126 @@
+CUE 2 Tracks - Tool for splitting audio CD image to tracks with cue sheet info.
+
+This README based on cue2tracks v0.2.10
+
+Usage:
+  cue2tracks [options] <cue file>
+
+Options:
+  -R - Disable testing and doing nothing - starts real work.
+  -i <file> - Set image file. By default its readed from cue.
+  -c <codec> - Setup output codec (flac default).
+  -l <level> - Setup level of compression of output codec (best default).
+  -f <codepage> - Convert to UTF-8 from this codepage...
+  -d - Disable taging output files with info from cue.
+  -A <album> - Set album title.
+  -P <performer> - Set album performer.
+  -D <date> - Set album date.
+  -G <genre> - Set album genre.
+  -I <id> - Set album disc ID.
+  -N <number> - Set album disc number.
+  -o <format string> - Set naming scheme for output file names.
+  -V - Print version and exit.
+  -n <level> : Process niceness level of codec tools (process scheduling priority):
+    -19 to 19, 0 - default.
+
+  Options only for mp3, ogg, m4a:
+  -Q <quality> : Set quality of codec compression (4 - default).
+  Quality may be:
+    MP3:   0 - high,  9 - low
+    M4A: 500 - high,  9 - low
+    OGG:  10 - high, -1 - low
+  -B <bitrate> : Set compression bitrate in kbps (128 default).
+  -M <bitrate mode> : C - Constant, V - Variable (default).
+    If choosen V - then -B specifies maximum bitrate.
+
+
+Codecs:
+
+  wav - no encode, raw wave.
+
+  flac (default) - Free Lossless Audio Codec. You can find it at
+  http://flac.sourceforge.net/ or in yours package manager.
+
+  flake - FLAC via FFMPEG engine. Look at http://flake.sf.net
+
+  ape - Money's Audio Codec. You can find it at
+  http://sourceforge.net/projects/mac-port.
+
+  wv - WavPack. You can find it at http://www.wavpack.com or in yours package
+  manager.
+
+  shn - shorten. You can find it at http://shnutils.freeshell.org/shorten/ or in
+  yours package manager.
+
+  ofr - OptimFROG. You can find it at http://www.losslessaudio.org/.
+
+  tta (only for input) - True Audio Codec. You can find it at http://tta.sourceforge.net/
+
+  mp3 - MP3 via Lame. Package is 'lame'. Look at http://lame.sourceforge.net.
+
+  m4a - AAC in M4A container. Package is 'faac' & 'faad2'. Look at http://www.audiocoding.com.
+
+  ogg - OGG. Use vorbis-tools package. Look at http://www.vorbis.com/.
+
+Compression levels:
+
+  best or 0 - Slow processing but high compression level
+
+  fast or 1 - Fast processing but low compression level
+
+  mid or 2  - Middle speel processing and compression level
+
+Codepage:
+
+  'codepage' - any codepage of 'iconv -l' output. Used for recode CUE sheet file
+  to UTF-8.
+
+Utils:
+
+  For correct work of cue2tracks you need these utils:
+
+  cuetools - Most important thing. You can find it at
+  http://developer.berlios.de/projects/cuetools/ or in yours package manager.
+
+  shntool - Second important thing. you can find it at
+  http://shnutils.freeshell.org/shntool/ or in yours package manager.
+
+  file, iconv - usualy installed, but maybe you'll need check for them.
+
+  metaflac - Tool for editing FLAC tags. Comes with flac.
+
+  apetag - Tool for editing APEv2 tags. You can find it at
+  http://muth.org/Robert/Apetag/ or in yours package manager.
+
+  id3v2 - Tool for editing mp3 tags. Package name is the same. Look at
+  http://id3v2.sourceforge.net/.
+
+  mp4tags - Tool for editing m4a tags. Package name is mpeg4ip-utils. Look at
+  http://mpeg4ip.net/.
+
+  vorbiscomment - Tool for editing ogg tags. Comes with vorbis-tools.
+
+Naming scheme is:
+
+  %A - Album title"
+  %P - Album performer"
+  %D - Album date"
+  %G - Album genre"
+  %a - Album disc number"
+  %t - Track title"
+  %p - Track performer"
+  %g - Track genre"
+  %n - Track number"
+  %N - Track number with leading zero"
+
+Note:
+
+  DISCID and DISCNUMBER tags available not for all file types...
+
+To get some action put in console this:
+
+    bash$ cue2tracks -o "/path/to/music/%P/%D - %A/%N" -R CDimage.cue
+
+or
+
+    bash$ cue2tracks -c ogg -f cp1251 -o "/path/to/music/%P/%D - The best album/Disc %a/%N" -R CDimage.cue

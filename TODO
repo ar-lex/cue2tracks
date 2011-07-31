@@ -1,0 +1,10 @@
+1. Support for cue sheet for splitted image
+   (with many FILE entries)
+2. Extract only selected tracks.
+3. Automaticaly determine encoding of cue sheet. 
+4. Add gettext support or other localization engine.
+5. Support ac3, alac.
+6. Loging actions.
+7. Try to use POSIX shell.
+8. User settings saved in ~/.cue2tracks/
+9. Extract from archives: zip, rar, 7z, tar, iso (+wv)...

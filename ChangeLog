@@ -1,0 +1,308 @@
+Version: 0.2.11
+Date: 21.06.2009 16:00 MSD
+Changes:
+
+ - Fixed encode to m4a (aac)
+ - Added support mp4tags tool for m4a
+ - Again fixed bitrate setup for mp4, ogg and m4a
+
+Version: 0.2.10
+Date: 31.05.2009 23:12 MSD
+Changes:
+
+ - Marked as Bash script, not SH
+ - Added support of m4a (aac) en/de-coder
+ - Fixed bitrate setup for mp3 (Thanks to Vladimir Filippov)
+
+Version: 0.2.9.4
+Date: 18.06.2008 00:43 MSD
+Changes:
+
+ - Added support of composer info (new option -K)
+ - Fixed starting of new splitting process
+ - Fixes for clean full paths from split process output
+ - Updated colouring
+
+Version: 0.2.9.3
+Date: 15.06.2008 03:10 MSD
+Changes:
+
+ - Fixed input file checks
+
+Version: 0.2.9.2
+Date: 12.06.2008 16:00 MSD
+Changes:
+
+ - Fixed oggenc options for bitrate/quality
+
+Version: 0.2.9.1
+Date: 09.06.2008 22:15 MSD
+Changes:
+
+ - Fixed bugs with spaces in options - dumb forking...
+   So, now there is no fork at all, Neo
+
+Version: 0.2.9
+Date: 08.06.2008 22:55 MSD
+Changes:
+
+ - !!! Commandline Options Changed !!!
+ - Added unpack to WAV function
+ - Rewrited setup nice level - now it's set then program 'forking' self.
+ - Added support of DISCID and DISCNUMBER (via MEDIA) to wv/ape APEv2 tags
+ - Added mid-level compression
+ - Cleaned help screen
+
+Version: 0.2.8.1
+Date: 01.06.2008 02:50 MSD
+Changes:
+
+ - Fixed setting cue file directory.
+
+Version: 0.2.8
+Date: 01.06.2008 01:40 MSD
+Changes:
+
+ - Removed paths in files names from splitting output.
+ - Added support of DISCID and DISCNUMBER tags.
+ - Fixed extraction of DATE and GENRE values from cue.
+
+Version: 0.2.7
+Date: 23.03.2008 22:00 MSD
+Changes:
+
+ - Fixed return value of BOM check function.
+ - Added shntool version check.
+
+Version: 0.2.6.1
+Date: 23.03.2008 00:00 MSD
+Changes:
+
+ - Fixed missing disable of 'magenta' colour.
+
+Version: 0.2.6
+Date: 03.03.2008 00:00 MSD
+Changes:
+
+ - Added cue fixing code which:
+   1. Removes BOM os some unicoded CUEs
+   2. Adds empty line to the end of CUE if its missing.
+ - Added colouring control option '-C'.
+   Colors disabled now by default.
+ - Added xterm title setup control option '-T'.
+   XTerm title setup disabled now by default.
+ - Some code cleanup.
+
+Version: 0.2.5.1
+Date: 08.01.2008 17:13 MSD
+Changes:
+
+ - Fixed taging output if performer or genre
+   tags different from main.
+
+Version: 0.2.5
+Date: 27.12.2007 22:50 MSD
+Changes:
+
+ - Fixed input CD image file checks.
+   Thanks to Seclorum for report.
+
+Version: 0.2.4
+Date: 27.12.2007 00:10 MSD
+Changes:
+
+ - Fixed some string regexp issues with bash version 3.1 or less.
+   Thanks to Denis for report.
+
+Version: 0.2.3
+Date: 10.09.2007 21:20 MSD
+Changes:
+
+ - Fixed spliting loop if split tool crashed.
+
+Version: 0.2.2
+Date: 18.07.2007 13:30 MSD
+Changes:
+
+ - More fixes: some wrong test constructions.
+
+Version: 0.2.1
+Date: 18.07.2007 01:30 MSD
+Changes:
+
+ - More code clean up.
+ - Fixed bug: script stop real work after tools search.
+ - Added initial error codes.
+
+Version: 0.2.0
+Date: 10.07.2007 13:10 MSD
+Changes:
+
+ First 'stable' release. Only bugfixes in next 0.2.x releases.
+ New features will go to 0.3.x dev releases.
+
+ - Code cleanup
+ - Minor fixes.
+
+Version: 0.1.17
+Date: 22.06.2007 14:40 MSD
+Changes:
+
+ - Again fixed album genre and date information extraction.
+ - Fixed function that called on halt signals.
+
+Version: 0.1.16
+Date: 16.06.2007 01:50 MSD
+Changes:
+
+ - Fixed album genre information extraction
+   if its contains space or minus symbols.
+
+Version: 0.1.15
+Date: 15.06.2007 17:00 MSD
+Changes:
+
+ - Added signal traping for ^C, SIGTERM, SIGKILL
+   Now all process will be killed and temp dir cleaned, i hope.
+ - Minor fixes.
+
+Version: 0.1.14
+Date: 30.05.2007 19:00 MSD
+Changes:
+
+ - Fixed codec level setting
+ - Added options:
+   -i : set cd image file
+   -A : set album title
+   -P : set album performer
+ - Added initial coloring of output messages
+ - Speedup of file naming by scheme algorythm (use bash internal string
+   functions)
+
+Version: 0.1.13
+Date: 22.05.2007 03:20 MSD
+Changes:
+
+ - Fixed recoding cue sheet file if its like in ASCII then defined option -f
+
+Version: 0.1.12
+Date: 15.05.2007 23:40 MSD
+Changes:
+
+ - Updated change X terminal title then splitting.
+ - Small fixes
+
+Version: 0.1.11
+Date: 12.05.2007 01:30 MSD
+Changes:
+
+ - Fixed respose to cue sheet errors.
+ - Fixed errors with naming scheme then names contents '/' symbols.
+ - Added support for changing X terminal title.
+
+Version: 0.1.10
+Date: 10.05.2007 18:50 MSD
+Changes:
+
+ - Option -N changed to -R
+ - Added support for mp3 and ogg codecs
+ - Possibly support for splitting mp3 and ogg CD images.
+ - Added options that controls mp3 and ogg quality.
+
+Version: 0.1.9
+Date: 07.05.2007 08:30 MSD
+Changes:
+
+ - Added -q (quiet) option. Only errors goes to stderr.
+ - Added -s (split) option to split CD image in test mode (to /dev/null).
+ - Added -n (nice) option to set process sheduling level.
+
+Version: 0.1.8
+Date: 04.05.2007 21:00 MSD
+Changes:
+
+ - Fixed no taging then codec is 'flake'
+
+Version: 0.1.7
+Changes:
+
+ - Added support for 'flake' codec - flac realisation
+   via FFmpeg
+
+Version: 0.1.6
+Changes:
+
+ - Fixed bug with '&' character in tags which can make wrong file paths via
+   'naming scheme' becouse '&' is special character in sed
+ - Better and clean output
+
+Version: 0.1.5
+Changes:
+
+ - Fixed input directory location for indirect cue sheet loading
+ - Added output compression level control for flac, ape and wv codecs: 'fast'
+   and 'best'
+
+Version: 0.1.4
+Changes:
+
+ - Changed order of tools search
+ - Now you can recode cue sheet even in test mode so now script produce expected
+   result
+
+Version: 0.1.3
+Changes:
+
+ - Fixed name of script in help output
+ - Compression level for flac setted to 'best'
+
+Version: 0.1.2
+Changes:
+
+ - Fixed dumb bugs with temp directory
+ - Fixed taging output for APEv2 tags
+
+Version: 0.1.0
+Changes:
+
+ - Total script restructure
+ - Added support of getopts (bash needed)
+ - Changed commandline options
+ - Better codecs find algorithm
+ - File naming scheme support
+ - APEv2 tag support (apetag needed)
+
+Version: 0.0.8
+Changes:
+
+ - Added makefile and some info files, so
+   now it looks like normal package.
+ - Added tagging for ape files via 'apetag'.
+
+Version: 0.0.7
+Changes:
+
+ - Added 'null' codec for testing purpose.
+ - Some small fixes.
+
+Version: 0.0.6
+Changes:
+
+ - Added support for recode of CUE sheet file
+   from given codepage to UTF-8
+
+Version: 0.0.5
+Changes:
+
+ - Fixed errors this unicode file names and
+   file names with spaces.
+
+Initial release: 0.0.4
+
+ - Can decode from: shn, ape, flac, wv
+ - Cen encode to: shn, flac, wv
+ - Theoreticaly can decode from: ofr, tta
+ - Theoreticaly can encode to: ape, ofr
+ - Support flac taging from CUE sheet.
+ - Support only UTF-8 encoded CUE sheet.
+
