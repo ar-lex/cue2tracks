@@ -1,10 +1,15 @@
-Version: 0.2.11
-Date: 21.06.2009 16:00 MSD
+Version: 0.2.13
+Date: 29.09.2012 20:00 MSD
 Changes:
 
- - Fixed encode to m4a (aac)
- - Added support mp4tags tool for m4a
- - Again fixed bitrate setup for mp4, ogg and m4a
+ - Fixed search for tools
+ - Fixed tag writing
+ - Added support float values for quality option
+ - Added experimental support for mac-ffmpeg decoding: MAC->ffmpeg->WAV->...
+
+Version: 0.2.12
+Date: lost in time
+Skipped
 
 Version: 0.2.10
 Date: 31.05.2009 23:12 MSD

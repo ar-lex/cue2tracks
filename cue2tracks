@@ -1066,7 +1066,7 @@ read_album_info() {
 	then
 		tags_ALBUM_PERFORMER=`${tool_CP} -d %P "${cueFile}"`
 	else
-		tags_ALBUM_PERFORMER=${pre_ALBUM_PERFORMER}
+		tags_ALBUM_PERFORMER="${pre_ALBUM_PERFORMER}"
 	fi
 	print_message "\tAlbum Performer = ${color_cyan}${tags_ALBUM_PERFORMER}${color_default}"
 
@@ -1074,7 +1074,7 @@ read_album_info() {
 	then
 		tags_ALBUM_COMPOSER=`${tool_CP} -d %C "${cueFile}"`
 	else
-		tags_ALBUM_COMPOSER=${pre_ALBUM_COMPOSER}
+		tags_ALBUM_COMPOSER="${pre_ALBUM_COMPOSER}"
 	fi
 	[ -n "${tags_ALBUM_COMPOSER}" ] && print_message "\tAlbum Performer = ${color_cyan}${tags_ALBUM_PERFORMER}${color_default}"
 
@@ -1082,7 +1082,7 @@ read_album_info() {
 	then
 		tags_ALBUM_TITLE=`${tool_CP} -d %T "${cueFile}"`
 	else
-		tags_ALBUM_TITLE=${pre_ALBUM_TITLE}
+		tags_ALBUM_TITLE="${pre_ALBUM_TITLE}"
 	fi
 	print_message "\tAlbum Title = ${color_cyan}${tags_ALBUM_TITLE}${color_default}"
 
@@ -1090,7 +1090,7 @@ read_album_info() {
 	then
 		tags_ALBUM_GENRE=`${tool_CP} -d %G "${cueFile}"`
 	else
-		tags_ALBUM_GENRE=${pre_ALBUM_GENRE}
+		tags_ALBUM_GENRE="${pre_ALBUM_GENRE}"
 	fi
 
 	[ -n "${tags_ALBUM_GENRE}" ] || tags_ALBUM_GENRE=`grep -m 1 GENRE "${cueFile}" | sed -r -e 's/.?*REM\ GENRE\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
@@ -1117,53 +1117,88 @@ read_album_info() {
 	print_message "\tNumber of Tracks = ${color_cyan}${tags_ALBUM_TRACKS}${color_default}"
 }
 
+
+tag_flac_track() {
+    tag_Name="$1"
+    tag_Value="$2"
+
+    ${tag_FLAC} \
+    --set-tag="${tag_Name}=${tag_Value}" \
+    "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_FLAC}
+    fi
+}
+
+tag_ogg_track() {
+    tag_Name="$1"
+    tag_Value="$2"
+
+    ${tag_OGG} -a \
+    -t ${tag_Name}="${tag_Value}" \
+    "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_OGG}
+    fi
+}
+
+tag_ape_track() {
+    tag_Name="$1"
+    tag_Value="$2"
+
+    ${tag_APE} -i "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" -m update \
+    -p ${tag_Name}="${tag_Value}" &>/dev/null
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_APE}
+    fi
+}
+
+tag_m4a_track() {
+    tag_Name="$1"
+    tag_Value="$2"
+
+    ${tag_M4A} -${tag_Name} "${tag_Value}" "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_M4A}
+    fi
+}
+
+
 # function for track taging
 tag_track() {
 	case "${outCodec}" in
 		"flac" | "flake" )
 			if [ ${onlyTest} -eq 0 ]
 			then
-				optional=""
-				[ -n "${tags_ALBUM_DISCID}" ] && optional="${optional} --set-tag=DISCID=${tags_ALBUM_DISCID}"
-				[ -n "${tags_ALBUM_NUMBER}" ] && optional="${optional} --set-tag=DISCNUMBER=${tags_ALBUM_NUMBER}"
-				[ -n "${tags_TRACK_COMPOSER}" ] && optional="${optional} --set-tag=COMPOSER=${tags_TRACK_COMPOSER}"
-				${tag_FLAC} \
-				--set-tag="TITLE=${tags_TRACK_TITLE}" \
-				--set-tag="ALBUM=${tags_ALBUM_TITLE}" \
-				--set-tag="ARTIST=${tags_TRACK_PERFORMER}" \
-				--set-tag="DATE=${tags_ALBUM_DATE}" \
-				--set-tag="TRACKNUMBER=${tags_TRACK_ZNUMBER}" \
-				--set-tag="GENRE=${tags_TRACK_GENRE}" \
-				--set-tag="COMMENT=${NAME} v${VER}" \
-				${optional} \
-				"${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
-				if [ $? -ne 0 ]
-				then
-					print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
-					return ${E_CANT_TAG_FLAC}
-				fi
+				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_flac_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_FLAC} )
+				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_flac_track "DISCNUMBER" "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_FLAC} )
+				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_flac_track "COMPOSER" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_FLAC} )
+				tag_flac_track "TITLE" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "ALBUM" "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "ARTIST" "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "DATE" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "TRACKNUMBER" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_FLAC}
 			fi
 		;;
 		"ape" | "wv" )
 			if [ ${onlyTest} -eq 0 ]
 			then
-				[ -n "${tags_ALBUM_DISCID}" ] && optional="${optional} -p DISCID=${tags_ALBUM_DISCID}"
-				[ -n "${tags_ALBUM_NUMBER}" ] && optional="${optional} -p MEDIA=${tags_ALBUM_NUMBER}"
-				[ -n "${tags_TRACK_COMPOSER}" ] && optional="${optional} -p COMPOSER=${tags_TRACK_COMPOSER}"
-				${tag_APE} -i "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" -m update \
-				-p TITLE="${tags_TRACK_TITLE}" \
-				-p ALBUM="${tags_ALBUM_TITLE}" \
-				-p ARTIST="${tags_TRACK_PERFORMER}" \
-				-p YEAR="${tags_ALBUM_DATE}" \
-				-p TRACK="${tags_TRACK_ZNUMBER}" \
-				-p GENRE="${tags_TRACK_GENRE}" \
-				${optional} \
-				-p COMMENT="${NAME} v${VER}" &>/dev/null
-				if [ $? -ne 0 ]
-				then
-					print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
-					return ${E_CANT_TAG_APE}
-				fi
+				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_ape_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_APE} )
+				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_ape_track "MEDIA" "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_APE} )
+				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_ape_track "COMPOSER" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_APE} )
+				tag_ape_track "TITLE" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "ALBUM" "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "ARTIST" "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "YEAR" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "TRACK" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_APE}
 			fi
 		;;
 		"mp3" )
@@ -1192,51 +1227,33 @@ tag_track() {
 		"ogg" )
 			if [ ${onlyTest} -eq 0 ]
 			then
-				optional=""
-				[ -n "${tags_ALBUM_DISCID}" ] && optional="${optional} -t DISCID=${tags_ALBUM_DISCID}"
-				[ -n "${tags_ALBUM_NUMBER}" ] && optional="${optional} -t DISCNUMBER=${tags_ALBUM_NUMBER}"
-				[ -n "${tags_TRACK_COMPOSER}" ] && optional="${optional} -t COMPOSER=${tags_TRACK_COMPOSER}"
-				${tag_OGG} -w \
-				-t TITLE="${tags_TRACK_TITLE}" \
-				-t ALBUM="${tags_ALBUM_TITLE}" \
-				-t ARTIST="${tags_TRACK_PERFORMER}" \
-				-t DATE="${tags_ALBUM_DATE}" \
-				-t TRACKNUMBER="${tags_TRACK_ZNUMBER}" \
-				-t GENRE="${tags_TRACK_GENRE}" \
-				-t COMMENT="${NAME} v${VER}" \
-				${optional} \
-				 "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
-				if [ $? -ne 0 ]
-				then
-					print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
-					return ${E_CANT_TAG_OGG}
-				fi
+				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_ogg_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_OGG} )
+				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_ogg_track "DISCNUMBER" "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_OGG} )
+				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_ogg_track "COMPOSER" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_OGG} )
+				tag_ogg_track "TITLE" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "ALBUM" "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "ARTIST" "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "DATE" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "TRACKNUMBER" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_OGG}
 			fi
 		;;
 		"m4a" )
 			if [ ${onlyTest} -eq 0 ]
 			then
-				optional=""
 				optionalComment=""
 				[ -n "${tags_ALBUM_DISCID}" ] && optionalComment="${optionalComment}, DISCID=${tags_ALBUM_DISCID}"
-				[ -n "${tags_ALBUM_NUMBER}" ] && optionalComment="${optional} -disk ${tags_ALBUM_NUMBER}"
-				[ -n "${tags_TRACK_COMPOSER}" ] && optional="${optional} -writer ${tags_TRACK_COMPOSER}"
-				${tag_M4A} \
-				-song "${tags_TRACK_TITLE}" \
-				-album "${tags_ALBUM_TITLE}" \
-				-artist "${tags_TRACK_PERFORMER}" \
-				-year "${tags_ALBUM_DATE}" \
-				-track "${tags_TRACK_NUMBER}" \
-				-tracks "${tags_ALBUM_TRACKS}" \
-				-genre "${tags_TRACK_GENRE}" \
-				-comment "${NAME} v${VER}${optionalComment}" \
-				${optional} \
-				"${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" # &>/dev/null
-				if [ $? -ne 0 ]
-				then
-					print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
-					return ${E_CANT_TAG_M4A}
-				fi
+				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_m4a_track disk "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_M4A} )
+				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_m4a_track writer "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_M4A} )
+				tag_m4a_track song "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track album "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track artist "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track year "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track track "${tags_TRACK_NUMBER}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track tracks "${tags_ALBUM_TRACKS}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track genre "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track comment "${NAME} v${VER}${optionalComment}" || return ${E_CANT_TAG_M4A}
 			fi
 		;;
 	esac
@@ -1358,10 +1375,10 @@ onexit() {
 	str=`ps ax | grep shntool | grep -v grep`
 	if [ -n "${str}" ]
 	then
-		killall -Iq ${codec_OUT}
-		killall -Iq ${codec_IN}
-		killall -Iq shntool
-		killall -Iq cuebreackpoints
+		killall -q -I -- ${codec_OUT}
+		killall -q -I -- ${codec_IN}
+		killall -q -I -- shntool
+		killall -q -I -- cuebreackpoints
 	fi
 	if [[ "${tempDirName}" != "." ]]
 	then
@@ -1703,7 +1720,7 @@ then
 	print_message "\n${color_magenta}${NAME} executed in testing mode! To get real work rerun it with -R option or${color_default}"
 
     answ="N"
-    print_message -n "\n${color_magenta}Apply selected options? [y/${answ}]${color_default}"
+    print_message -n "\n${color_magenta}Apply selected options?${color_default}[y/${answ}]: "
     read answ
     answ=`echo ${answ} | tr [:upper:] [:lower:]`
 
