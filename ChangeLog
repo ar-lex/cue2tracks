@@ -1,3 +1,10 @@
+Version: 0.2.14
+Date: 29.09.2012 22:00 MSD
+Changes:
+
+ - Fixed permissions after copying cue for repair
+ - Added experimental TAK & MusePack support
+
 Version: 0.2.13
 Date: 29.09.2012 20:00 MSD
 Changes:

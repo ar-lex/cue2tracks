@@ -65,6 +65,8 @@ E_CODEC_M4Ad_NOT_FOUND=42
 E_CANT_TAG_M4A=43
 
 E_CODEC_FFMPEG_NOT_FOUND=44
+E_CODEC_MPC_NOT_FOUND=45
+E_CODEC_TAK_NOT_FOUND=46
 
 E_OPTERROR=65
 
@@ -74,8 +76,8 @@ NO_ARGS=0
 
 NAME="CUE 2 Tracks"
 DESC="Tool for spliting audio CD image to tracks with cue sheet info."
-VER="0.2.13"
-AUTHOR="Sergey <sergey.dryabzhinsky@gmail.com>"
+VER="0.2.14"
+AUTHOR="Sergey <sergey.dryabzhinsky@gmail.com> and other AUTHORS"
 
 # (tool|tag|codec)_* - set to <file> if its exists, "" otherwise
 
@@ -102,6 +104,8 @@ codec_WVu=""
 codec_OFR=""
 codec_SHN=""
 codec_TTA=""
+codec_MPC=""
+codec_TAK=""
 
 codec_MP3=""
 codec_OGGd=""
@@ -140,6 +144,8 @@ codec_OGGd_needed=0
 codec_OGGe_needed=0
 codec_M4Ae_needed=0
 codec_M4Ad_needed=0
+codec_MPC_needed=0
+codec_TAK_needed=0
 
 cueFile=""
 inFile=""
@@ -278,6 +284,8 @@ print_codecs() {
 \t\tmp3   : mpeg 1 layer 3 via lame,\n\
 \t\togg   : ogg vorbis\n\
 \t\tm4a   : aac with m4a container,\n\
+\t\tmpc   : MusePack,\n\
+\t\ttak   : Tom's lossless Audio Kompressor,\n\
 " >&2
 }
 
@@ -348,7 +356,7 @@ Options:\n\
 \t-n <level> : Nice level (process scheduling priority):\n\
 \t             From high (-19) to low (19)\n\
 \n\
-\tOptions only for mp3, ogg:\n\
+\tOptions only for mp3, ogg, mpc:\n\
 \t-Q <quality> : Set quality of codec compression (4 - default)\n\
 \tQuality may be:\n\
 \t\tMP3 :   0 - high,  9 - low\n\
@@ -395,6 +403,15 @@ check_outCodec() {
 			[ ${outCodecLevel} -eq 2 ] && outCodecParam=" flake -4 - %f"
 			codec_OUT="flake"
 		;;
+		"tak" )
+			codec_TAK_needed=1
+			if [ ${putTags} -eq 1 ]; then tag_APE_needed=1; fi
+			outExt="tak"
+			toolCodec="${outCodec}"
+			outCodecParam=" takc -e -v -pMax -md5 -silent -overwrite - %f"
+			[ ${outCodecLevel} -eq 1 ] && outCodecParam=" takc -e -v -md5 -silent -overwrite - %f"
+			codec_OUT="takc"
+		;;
 		"ape" )
 			codec_APE_needed=1
 			if [ ${putTags} -eq 1 ]; then tag_APE_needed=1; fi
@@ -426,6 +443,14 @@ check_outCodec() {
 			toolCodec="${outCodec}"
 			outExt="shn"
 			codec_OUT="shorten"
+		;;
+		"mpc" )
+			codec_MPC_needed=1
+			if [ ${putTags} -eq 1 ]; then tag_APE_needed=1; fi
+			toolCodec="cust"
+			outExt="mpc"
+			codec_OUT="mpcenc"
+            outCodecParam=" ext=mpc mpcenc --silent --overwrite --quality ${outCodecQuality} - %f"
 		;;
 		"mp3" )
 			codec_MP3_needed=1
@@ -703,6 +728,20 @@ search_dencoders() {
 		codec_OGGe=`gettool oggenc`
 		[ -n "${codec_OGGe}" ] || return ${E_CODEC_OGGe_NOT_FOUND}
 	fi
+
+     if [ ${codec_MPC_needed} -eq 1 ]
+     then
+         checktool mpcenc musepack-tools
+         codec_MPC=`gettool mpcenc`
+         [ -n "${codec_MPC}" ] || return ${E_CODEC_MPC_NOT_FOUND}
+     fi
+
+     if [ ${codec_TAK_needed} -eq 1 ]
+     then
+         checktool takc tak
+         codec_TAK=`gettool takc`
+         [ -n "${codec_TAK}" ] || return ${E_CODEC_TAK_NOT_FOUND}
+     fi
 }
 
 # function for search taging tools
@@ -800,6 +839,8 @@ prepare_and_fix_cue() {
 		bnc=`basename "${cueFile}" .cue`
 		ncn="${tempDirName}/${bnc}.line.cue"
 		cp "${cueFile}" "${ncn}"
+        # Try to fix copied permissions @9
+        chmod 644 "${ncn}"
 		echo -e "\n" >> "${ncn}"
 		[ $? -ne 0 ] && return ${E_CANT_FIX_CUE}
 		cueFile="${ncn}"
@@ -868,7 +909,7 @@ recode_to_wav() {
 	print_message "\tRecoding '${color_cyan}${inFile}${color_default}' to WAV..."
 	case "${inCodec}" in
 		"flac" )
-			flac -d -f -o "${FullPathOUT}" "${FullPathIN}"
+			${codec_FLAC} -d -f -o "${FullPathOUT}" "${FullPathIN}"
 			errors=$?
 		;;
 		"flac_ffmpeg" )
@@ -1186,7 +1227,7 @@ tag_track() {
 				tag_flac_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_FLAC}
 			fi
 		;;
-		"ape" | "wv" )
+		"ape" | "wv" | "mpc" | "tak" )
 			if [ ${onlyTest} -eq 0 ]
 			then
 				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_ape_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_APE} )
