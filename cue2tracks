@@ -1464,12 +1464,12 @@ do
 			splitInTest=1
 		;;
 		n )
-			niceness=`echo ${OPTARG} | sed -r 's/[^-0-9](.?*)$//'`
+			niceness=`echo ${OPTARG} | sed -r 's/[^-0-9]//g'`
 			[ `echo "${niceness} < -19" | bc` -eq 1 ] && niceness=-19
 			[ `echo "${niceness} > 19" | bc` -eq 1 ] && niceness=19
 		;;
 		Q )
-			outCodecQuality=`echo ${OPTARG} | sed -r 's/[^-0-9\.](.?*)$//'`
+			outCodecQuality=`echo ${OPTARG} | sed -r 's/[^-0-9\.]//g'`
 			[ `echo "${outCodecQuality} < -1" | bc` -eq 1 ] && outCodecQuality=-1
 			[ `echo "${outCodecQuality} > 10" | bc` -eq 1 ] && outCodecQuality=10
 			outCodecLevel=3
@@ -1482,7 +1482,7 @@ do
 			fi
 		;;
 		B )
-			outCodecBitRate=`echo ${OPTARG} | sed -r 's/[^-0-9\.](.?*)$//'`
+			outCodecBitRate=`echo ${OPTARG} | sed -r 's/[^0-9\.]//g'`
 			[ `echo "${outCodecBitRate} < 32" | bc` -eq 1 ] && outCodecBitRate=32
 			[ `echo "${outCodecBitRate} > 500" | bc` -eq 1 ] && outCodecBitRate=500
 			outCodecLevel=3
