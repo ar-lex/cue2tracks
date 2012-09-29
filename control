@@ -1,0 +1,15 @@
+Source: cue2tracks
+Section: media
+Priority: extra
+Maintainer: Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: http://code.google.com/p/cue2tracks/
+
+Package: cue2tracks
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, flac, cuetools, shntool (>= 3.0.0)
+Recommends: vorbis-tools, lame, wavpack
+Suggests: ffmpeg
+Description:
+ Tool for splitting audio CD image to tracks with cue sheet info.
