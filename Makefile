@@ -11,7 +11,7 @@ all:
 	@echo "You dont need to compile this..."
 
 install:
-	@install -m 755 -d "$(DESTDIR)/bin"
+	@install -m 755 -d "$(PREFIX)/bin"
 	@install -m 755 "$(SOURCE)" "$(PREFIX)/bin/${PROGRAM}"
 
 uninstall:
