@@ -1,3 +1,9 @@
+Version: 0.2.15
+Date: 06.07.2013 14:09 MSD
+Changes:
+
+ - Search for similar input file if original from cue not found (dmitry.a.kirilin)
+
 Version: 0.2.14
 Date: 29.09.2012 22:00 MSD
 Changes:
