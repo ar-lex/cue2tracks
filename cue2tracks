@@ -76,7 +76,7 @@ NO_ARGS=0
 
 NAME="CUE 2 Tracks"
 DESC="Tool for spliting audio CD image to tracks with cue sheet info."
-VER="0.2.14"
+VER="0.2.15"
 AUTHOR="Sergey <sergey.dryabzhinsky@gmail.com> and other AUTHORS"
 
 # (tool|tag|codec)_* - set to <file> if its exists, "" otherwise
@@ -518,8 +518,23 @@ check_inCodec() {
 
 	if [ ! -e "${inFileDir}/${inFile}" ]
 	then
-		print_error "File '${color_cyan}${inFileDir}/${inFile}${color_default}' not found!"
-		[ ${onlyTest} -eq 0 ] && return ${E_IN_FILE_NOT_FOUND}
+		print_error "\tFile '${color_cyan}${inFileDir}/${inFile}${color_default}' not found, trying other extensions..."
+        inFileBase="${inFile%.*}"
+        extFound=""
+        for ext in flac ape wv ofr shn tta mp3 m4a ogg wav
+        do
+            if [ -e "${inFileDir}/${inFileBase}.${ext}" -o -e "${inFileDir}/${inFileBase}.${ext^^}" ]; then
+                print_message "\tFound: ${inFileDir}/${inFileBase}.${ext}"
+                extFound=${ext}
+                break
+            fi
+        done
+        if [ -z "$extFound" ]; then
+            print_error "Neither file '${color_cyan}${inFileDir}/${inFile}${color_default}' not found, nor similar with another extension!"
+            [ ${onlyTest} -eq 0 ] && return ${E_IN_FILE_NOT_FOUND}
+        else
+            inFile="${inFileBase}.${extFound}"
+        fi
 	fi
 
 	inCodec="${inFile##*.}"
