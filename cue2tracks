@@ -1632,7 +1632,7 @@ fi
 
 [ "${inFileDir}" = "." ] && inFileDir=`pwd`
 
-tempDirName=`mktemp -q -d /tmp/${scriptName}-XXXXXX`
+tempDirName=`mktemp -q -d --tmpdir ${scriptName}-XXXXXX`
 [ -n "${tempDirName}" ] || tempDirName="."
 
 testformat=`echo ${outFormatStr} | sed -e 's:%n::' -e 's:%N::' -e 's:%t::'`
