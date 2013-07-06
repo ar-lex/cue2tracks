@@ -1,3 +1,9 @@
+Version: 0.2.16
+Date: 06.07.2013 14:11 MSD
+Changes:
+
+ - Honor TMPDIR env
+
 Version: 0.2.15
 Date: 06.07.2013 14:09 MSD
 Changes:

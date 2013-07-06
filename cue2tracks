@@ -76,7 +76,7 @@ NO_ARGS=0
 
 NAME="CUE 2 Tracks"
 DESC="Tool for spliting audio CD image to tracks with cue sheet info."
-VER="0.2.15"
+VER="0.2.16"
 AUTHOR="Sergey <sergey.dryabzhinsky@gmail.com> and other AUTHORS"
 
 # (tool|tag|codec)_* - set to <file> if its exists, "" otherwise
