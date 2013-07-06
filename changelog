@@ -1,3 +1,9 @@
+cue2tracks (0.2.16-1ubuntu1) unstable; urgency=low
+
+  * Honor TMPDIR env
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 06 Jul 2013 14:52:03 +0400
+
 cue2tracks (0.2.15-1ubuntu1) unstable; urgency=low
 
   * Search for similar input file if original from cue not found
