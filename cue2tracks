@@ -363,6 +363,9 @@ Options:\n\
 \t-R              : Disable testing and doing nothing - starts Real work\n\
 \t-C              : Use colored messages\n\
 \t-X              : Set XTerm title\n\
+\t-W              : Force recode to WAV before split. Make image.{codec}.wav\n\
+\t-e              : Switch to debug mode\n\
+\t-L <log file>   : Set log file. By default - none.\n\
 \t-i <image file> : Set CD image file. If not set - read from cue\n\
 \t-c <codec>      : Set output codec" >&2
 	print_codecs

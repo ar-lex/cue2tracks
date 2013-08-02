@@ -6,34 +6,36 @@ Usage:
   cue2tracks [options] <cue file>
 
 Options:
-  -R - Stop testing and doing nothing - starts real work.
-  -W - Force recode to WAV before split. Make image.{codec}.wav
-  -e - Switch to debug mode
-  -L <file> - Set log file. By default - none.
-  -i <file> - Set image file. By default its readed from cue.
-  -c <codec> - Setup output codec (flac default).
-  -l <level> - Setup level of compression of output codec (best default).
-  -f <codepage> - Convert to UTF-8 from this codepage...
-  -d - Disable taging output files with info from cue.
-  -A <album> - Set album title.
-  -P <performer> - Set album performer.
-  -D <date> - Set album date.
-  -G <genre> - Set album genre.
-  -I <id> - Set album disc ID.
-  -N <number> - Set album disc number.
-  -o <format string> - Set naming scheme for output file names.
-  -V - Print version and exit.
-  -n <level> : Process niceness level of codec tools (process scheduling priority):
+  -R            : Stop testing and doing nothing - starts real work.
+  -C            : Use colored messages
+  -X            : Set XTerm title
+  -W            : Force recode to WAV before split. Make image.{codec}.wav
+  -e            : Switch to debug mode
+  -L <file>     : Set log file. By default - none.
+  -i <file>     : Set image file. By default its readed from cue.
+  -c <codec>    : Setup output codec (flac default).
+  -l <level>    : Setup level of compression of output codec (best default).
+  -f <codepage> : Convert to UTF-8 from this codepage...
+  -d            : Disable taging output files with info from cue.
+  -A <album>    : Set album title.
+  -P <performer>    : Set album performer.
+  -D <date>     : Set album date.
+  -G <genre>    : Set album genre.
+  -I <id>       : Set album disc ID.
+  -N <number>   : Set album disc number.
+  -o <format string>    : Set naming scheme for output file names.
+  -V            : Print version and exit.
+  -n <level>    : Process niceness level of codec tools (process scheduling priority):
     -19 to 19, 0 - default.
 
   Options only for mp3, ogg, m4a:
-  -Q <quality> : Set quality of codec compression (4 - default).
+  -Q <quality>  : Set quality of codec compression (4 - default).
   Quality may be:
     MP3:   0 - high,  9 - low
     M4A: 500 - high,  9 - low
     OGG:  10 - high, -1 - low
-  -B <bitrate> : Set compression bitrate in kbps (128 default).
-  -M <bitrate mode> : C - Constant, V - Variable (default).
+  -B <bitrate>  : Set compression bitrate in kbps (128 default).
+  -M <bitrate mode>     : C - Constant, V - Variable (default).
     If choosen V - then -B specifies maximum bitrate.
 
 
