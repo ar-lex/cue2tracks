@@ -277,11 +277,10 @@ checktool() {
 gettool() {
 	tool="$1"
 
-    log_debug "gettool(): tool='$1'"
-
 	ctool=`which "${tool}" 2>/dev/null`
 	if [ ! -n "${ctool}" ]
 	then
+        log_debug "gettool(): tool='$1' not found"
 		return ${E_TOOL_NOT_FOUND}
 	else
 		echo "${ctool}"
@@ -1588,7 +1587,7 @@ run_section() {
 
 # --== MAIN PROGRAM ==--
 
-while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:i:hA:P:K:N:We:L" Option
+while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:i:hA:P:K:N:WL:e" Option
 do
 	case ${Option} in
 		e )
@@ -1892,7 +1891,7 @@ fi
 run_section "Reading album info..." read_album_info
 [ ${inFile2WAV} -ne 0 ] && run_section "Recode to WAV..." recode_to_wav
 
-if [ $logDebug -eq 0 ]l then
+if [ $logDebug -eq 0 ]; then
     run_section "Start splitting..." split_image
 else
     run_section "Start splitting..." split_image_debug
@@ -1915,7 +1914,13 @@ then
 
         run_section "Reading album info..." read_album_info
         [ ${inFile2WAV} -ne 0 ] && run_section "Recode to WAV..." recode_to_wav
-        run_section "Start splitting..." split_image
+
+        if [ $logDebug -eq 0 ]; then
+            run_section "Start splitting..." split_image
+        else
+            run_section "Start splitting..." split_image_debug
+        fi
+
         run_section "Processing tracks..." process_tracks
 
     fi
