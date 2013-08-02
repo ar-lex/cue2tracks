@@ -1,12 +1,15 @@
 CUE 2 Tracks - Tool for splitting audio CD image to tracks with cue sheet info.
 
-This README based on cue2tracks v0.2.10
+This README based on cue2tracks v0.2.16
 
 Usage:
   cue2tracks [options] <cue file>
 
 Options:
-  -R - Disable testing and doing nothing - starts real work.
+  -R - Stop testing and doing nothing - starts real work.
+  -W - Force recode to WAV before split. Make image.{codec}.wav
+  -e - Switch to debug mode
+  -L <file> - Set log file. By default - none.
   -i <file> - Set image file. By default its readed from cue.
   -c <codec> - Setup output codec (flac default).
   -l <level> - Setup level of compression of output codec (best default).

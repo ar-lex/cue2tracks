@@ -172,6 +172,8 @@ outFileName=""
 tempDirName="."
 scriptName=`basename "$0"`
 
+logDebug=0
+logFile=""
 onlyTest=1
 quiteMode=0
 splitInTest=0
@@ -216,16 +218,40 @@ set_xterm_title() {
 	[ ${useXTitle} -ne 0 ] && echo -ne "\033]0;${NAME} v${VER} -= $1 =- \007"
 }
 
+log_file() {
+    if [ ! -z "$logFile" ]; then
+        echo `date +"%F %T"`": $1" >> "$logFile"
+    fi
+}
+
+log_debug() {
+    if [ $logDebug -ne 0 ]; then
+        [ ${quiteMode} -eq 0 ] && echo `date +"%F %T"`"[DEBUG]: $1"
+        log_file "$1"
+    fi
+}
+
+get_tool_log_file() {
+    if [ ! -z "$logFile" ]; then
+        echo "$logFile"
+    else
+        echo "/dev/null"
+    fi
+}
+
 print_error() {
 	echo -e "${color_red}Error${color_default}: $1" >&2
+    log_file "Error: $1"
 }
 
 print_message() {
 	if [[ "$1" == "-n" ]]
 	then
 		[ ${quiteMode} -eq 0 ] && echo -e -n "$2"
+        log_file "$2"
 	else
 		[ ${quiteMode} -eq 0 ] && echo -e "$1"
+        log_file "$1"
 	fi
 }
 
@@ -233,6 +259,8 @@ print_message() {
 checktool() {
 	tool="$1"
 	pk="$2"
+
+    log_debug "checktool(): tool='$1' pk='$2'"
 
 	print_message -n "\t${color_yellow}*${color_default} Checking for '${color_cyan}${tool}${color_default}'..."
 
@@ -245,8 +273,12 @@ checktool() {
 		print_message "\t[${color_green}ok${color_default}]"
 	fi
 }
+
 gettool() {
 	tool="$1"
+
+    log_debug "gettool(): tool='$1'"
+
 	ctool=`which "${tool}" 2>/dev/null`
 	if [ ! -n "${ctool}" ]
 	then
@@ -258,6 +290,9 @@ gettool() {
 
 # check shntool version
 check_shntool_version() {
+
+    log_debug "check_shntool_version()"
+
 	print_message -n "\t${color_yellow}*${color_default} Checking '${color_cyan}shntool${color_default}' version..."
 	ver=`shntool -v 2>&1 | grep shntool | awk '{print $2}'`
 	ver_clean=`echo ${ver} | sed -e 's:\.::g'`
@@ -378,6 +413,9 @@ print_version() {
 
 # function for checking output codecs
 check_outCodec() {
+
+    log_debug "check_outCodec()"
+
 	[ ! -n "${outCodec}" ] && outCodec="flac"
 
 	outCodec=`echo ${outCodec} | tr [:upper:] [:lower:]`
@@ -512,6 +550,9 @@ check_outCodec() {
 }
 
 check_inCodec() {
+
+    log_debug "check_inCodec()"
+
 	[ ! -n "${inFile}" ] && inFile=`grep -m 1 FILE "${cueFile}" | sed -r 's/(.?*)\"(.?*)\"(.?*)/\2/g'`
 
 	print_message "\tFile to split: '${color_cyan}${inFileDir}/${inFile}${color_default}'"
@@ -592,6 +633,9 @@ check_inCodec() {
 
 # function for search tools
 search_tools() {
+
+    log_debug "search_tools()"
+
 	if [ ${tool_BC_needed} -eq 1 ]
 	then
 		checktool bc bc
@@ -638,6 +682,9 @@ search_tools() {
 
 # function for searching (de|en)coders
 search_dencoders() {
+
+    log_debug "search_dencoders()"
+
 	if [ ${codec_WVp_needed} -eq 1 ]
 	then
 		checktool wavpack wavpack
@@ -761,6 +808,9 @@ search_dencoders() {
 
 # function for search taging tools
 search_tagers() {
+
+    log_debug "search_tagers()"
+
 	if [ ${tag_APE_needed} -eq 1 ]
 	then
 		checktool apetag apetag
@@ -800,6 +850,9 @@ search_tagers() {
 #function for trying codepage
 try_codepage() {
 	tcp=$1
+
+    log_debug "try_codepage(): tcp='$1'"
+
 	if [ -n "${tcp}" ]
 	then
 		trycdp=`${tool_IC} -l | grep -i "${tcp}"`
@@ -822,10 +875,15 @@ get_local_codepage() {
 	else
 		locCP="ASCII"
 	fi
+
+    log_debug "get_local_codepage(): locCP='$locCP'"
 }
 
+# Check for BOM simbol
 is_file_unicode() {
-	# Check for BOM simbol
+
+    log_debug "is_file_unicode()"
+
 	[ ! -f "$1" ] && return -1
 	bom=`head -c 3 "$1"`
 	[ ${bom} = $'\357\273\277' ] && return 1
@@ -833,6 +891,9 @@ is_file_unicode() {
 }
 
 prepare_and_fix_cue() {
+
+    log_debug "prepare_and_fix_cue()"
+
 	is_file_unicode "${cueFile}"
 	# Remove BOM record?
 	if [ $? -eq 1 ]
@@ -865,6 +926,9 @@ prepare_and_fix_cue() {
 
 # function for recode cue sheet file
 recode_cue() {
+
+    log_debug "recode_cue()"
+
 	isutf=""
 	if [ -n "${tool_F}" ]
 	then
@@ -916,6 +980,9 @@ recode_cue() {
 }
 
 recode_to_wav() {
+
+    log_debug "recode_to_wav()"
+
 	inFileWAV="${inFile}.wav"
 	[ ${onlyTest} -ne 0 ] && return
 	errors=0
@@ -1017,6 +1084,9 @@ split_cond() {
 
 # function for image splitting
 split_image() {
+
+    log_debug "split_image()"
+
 	runopt=""
 	[ ${quiteMode} -ne 0 ] && runopt="-q"
 	file_splitlog="${tempDirName}/split.log"
@@ -1106,10 +1176,43 @@ split_image() {
 	fi
 }
 
+# function for image splitting (debug version), just output everything
+split_image_debug() {
+
+    log_debug "split_image_debug()"
+
+	runopt=""
+	[ ${quiteMode} -ne 0 ] && runopt="-q"
+	file_splitlog="${tempDirName}/split.log"
+	file_splitlogwork="${file_splitlog}.work"
+	err=0
+	_outCodecOpts=""
+	if [ ${onlyTest} -eq 0 ]
+	then
+		_outCodecOpts="${toolCodec}${outCodecParam}"
+	else
+		[ ${splitInTest} -eq 0 ] && return 0
+		_outCodecOpts="null"
+	fi
+
+    log=`get_tool_log_file`
+
+	cd "${inFileDir}"
+	${tool_CBP} "${cueFile}" | ${tool_ST} split ${runopt} -d "${tempDirName}" -O always -t %n ${inCodecParam} -o "${_outCodecOpts}" "./${inFile}" | tee -a "$log"
+    err=$?
+	cd "${OLDPWD}"
+
+	if [ ${err} -ne 0 ]
+	then
+		print_error "Some error occured while spliting file '${color_cyan}${inFileDir}/${inFile}${color_default}'!"
+		return ${E_CANT_SPLIT}
+	fi
+}
+
 # function for reading album info
 read_album_info() {
 
-    echo "tool_CP=${tool_CP}; cueFile=${cueFile}"
+    log_debug "read_album_info(): tool_CP=${tool_CP}; cueFile=${cueFile}"
 
 	test=`${tool_CP} -d %N "${cueFile}" 2>&1 | grep error`
 	if [ -n "${test}" ]
@@ -1178,9 +1281,15 @@ tag_flac_track() {
     tag_Name="$1"
     tag_Value="$2"
 
+    log_debug "tag_flac_track(): tag_Name='$1' tag_Value='$2'"
+
+    log_debug "run ${tag_FLAC}"
+
+    log=`get_tool_log_file`
+
     ${tag_FLAC} \
     --set-tag="${tag_Name}=${tag_Value}" \
-    "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>1 | tee -a "$log"
     if [ $? -ne 0 ]; then
         print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
         return ${E_CANT_TAG_FLAC}
@@ -1358,6 +1467,9 @@ move_track() {
 
 # function for tracks processing
 process_tracks() {
+
+    log_debug "process_tracks()"
+
 	[[ "${tags_ALBUM_TRACKS}" == "" || "${tags_ALBUM_TRACKS}" == "0" ]] && return ${E_WRONG_NUM_TRACKS}
 	for (( i=1; i<=${tags_ALBUM_TRACKS}; i++ )) {
 		if (( $i < 10 ))
@@ -1473,9 +1585,13 @@ run_section() {
 
 # --== MAIN PROGRAM ==--
 
-while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:i:hA:P:K:N:W" Option
+while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:i:hA:P:K:N:We:L" Option
 do
 	case ${Option} in
+		e )
+			logDebug=1
+            export logDebug
+		;;
 		W )
 			inFile2WAV=1
 		;;
@@ -1494,7 +1610,11 @@ do
 			tool_IC_needed=1
 		;;
 		o )
-			outFormatStr=${OPTARG}
+			outFormatStr="${OPTARG}"
+		;;
+		L )
+			logFile="${OPTARG}"
+            export logFile
 		;;
 		d )
 			putTags=0
@@ -1768,7 +1888,13 @@ fi
 
 run_section "Reading album info..." read_album_info
 [ ${inFile2WAV} -ne 0 ] && run_section "Recode to WAV..." recode_to_wav
-run_section "Start splitting..." split_image
+
+if [ $logDebug -eq 0 ]l then
+    run_section "Start splitting..." split_image
+else
+    run_section "Start splitting..." split_image_debug
+fi
+
 run_section "Processing tracks..." process_tracks
 
 if [ ${onlyTest} -eq 1 ]
