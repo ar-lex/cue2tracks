@@ -220,13 +220,13 @@ set_xterm_title() {
 
 log_file() {
     if [ ! -z "$logFile" ]; then
-        echo `date +"%F %T"`": $1" >> "$logFile"
+        echo -e `date +"%F %T"`": $1" >> "$logFile"
     fi
 }
 
 log_debug() {
     if [ $logDebug -ne 0 ]; then
-        [ ${quiteMode} -eq 0 ] && echo `date +"%F %T"`"[DEBUG]: $1"
+        [ ${quiteMode} -eq 0 ] && echo -e `date +"%F %T"`"[DEBUG]: $1"
         log_file "$1"
     fi
 }
@@ -1200,7 +1200,7 @@ split_image_debug() {
     log=`get_tool_log_file`
 
 	cd "${inFileDir}"
-	${tool_CBP} "${cueFile}" | ${tool_ST} split ${runopt} -d "${tempDirName}" -O always -t %n ${inCodecParam} -o "${_outCodecOpts}" "./${inFile}" | tee -a "$log"
+	${tool_CBP} "${cueFile}" | ${tool_ST} split ${runopt} -d "${tempDirName}" -O always -t %n ${inCodecParam} -o "${_outCodecOpts}" "./${inFile}" 2>&1 | tee -a "$log"
     err=$?
 	cd "${OLDPWD}"
 
@@ -1291,7 +1291,7 @@ tag_flac_track() {
 
     ${tag_FLAC} \
     --set-tag="${tag_Name}=${tag_Value}" \
-    "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>1 | tee -a "$log"
+    "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" 2>&1 | tee -a "$log"
     if [ $? -ne 0 ]; then
         print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
         return ${E_CANT_TAG_FLAC}
@@ -1615,7 +1615,8 @@ do
 			outFormatStr="${OPTARG}"
 		;;
 		L )
-			logFile="${OPTARG}"
+			logFile=`readlink -m "${OPTARG}"`
+            log_debug "Log file = $logFile"
             export logFile
 		;;
 		d )
