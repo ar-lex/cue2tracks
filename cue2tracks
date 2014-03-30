@@ -189,6 +189,7 @@ pre_ALBUM_DATE=""
 pre_ALBUM_GENRE=""
 pre_ALBUM_DISCID=""
 pre_ALBUM_NUMBER=""
+pre_ALBUM_COMMENT=""
 
 tags_ALBUM_TITLE=""
 tags_ALBUM_PERFORMER=""
@@ -198,6 +199,7 @@ tags_ALBUM_DATE=""
 tags_ALBUM_TRACKS=0
 tags_ALBUM_DISCID=""
 tags_ALBUM_NUMBER=""
+tags_ALBUM_COMMENT=""
 tags_TRACK_TITLE=""
 tags_TRACK_PERFORMER=""
 tags_TRACK_COMPOSER=""
@@ -382,6 +384,7 @@ Options:\n\
 \t-G <genre>         : Set album genre\n\
 \t-I <id>            : Set album disk ID\n\
 \t-N <number>        : Set album disc number\n\
+\t-O <comment>       : Set album comment\n\
 \t-o <format string> : Set naming scheme for output files\
 " >&2
 	print_naming_scheme
@@ -1276,6 +1279,11 @@ read_album_info() {
 
 	tags_ALBUM_TRACKS=`${tool_CP} -d %N "${cueFile}"`
 	print_message "\tNumber of Tracks = ${color_cyan}${tags_ALBUM_TRACKS}${color_default}"
+
+	[ -n "${pre_ALBUM_COMMENT}" ] && tags_ALBUM_COMMENT=${pre_ALBUM_COMMENT}
+	[ -n "${tags_ALBUM_COMMENT}" ] || tags_ALBUM_COMMENT=`grep -m 1 COMMENT "${cueFile}" | sed -r -e 's/.?*REM\ COMMENT\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
+	[ -n "${tags_ALBUM_COMMENT}" ] || tags_ALBUM_COMMENT="${NAME} v${VER}"
+	print_message "\tComment = ${color_cyan}${tags_ALBUM_COMMENT}${color_default}"
 }
 
 
@@ -1350,7 +1358,7 @@ tag_track() {
 				tag_flac_track "DATE" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "TRACKNUMBER" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_FLAC}
-				tag_flac_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_FLAC}
 			fi
 		;;
 		"ape" | "wv" | "mpc" | "tak" )
@@ -1365,7 +1373,7 @@ tag_track() {
 				tag_ape_track "YEAR" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_APE}
 				tag_ape_track "TRACK" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_APE}
 				tag_ape_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_APE}
-				tag_ape_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_APE}
+				tag_ape_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_APE}
 			fi
 		;;
 		"mp3" )
@@ -1403,7 +1411,7 @@ tag_track() {
 				tag_ogg_track "DATE" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_OGG}
 				tag_ogg_track "TRACKNUMBER" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_OGG}
 				tag_ogg_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_OGG}
-				tag_ogg_track "COMMENT" "${NAME} v${VER}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_OGG}
 			fi
 		;;
 		"m4a" )
@@ -1420,7 +1428,7 @@ tag_track() {
 				tag_m4a_track track "${tags_TRACK_NUMBER}" || return ${E_CANT_TAG_M4A}
 				tag_m4a_track tracks "${tags_ALBUM_TRACKS}" || return ${E_CANT_TAG_M4A}
 				tag_m4a_track genre "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_M4A}
-				tag_m4a_track comment "${NAME} v${VER}${optionalComment}" || return ${E_CANT_TAG_M4A}
+				tag_m4a_track comment "${tags_ALBUM_COMMENT}${optionalComment}" || return ${E_CANT_TAG_M4A}
 			fi
 		;;
 	esac
@@ -1587,7 +1595,7 @@ run_section() {
 
 # --== MAIN PROGRAM ==--
 
-while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:i:hA:P:K:N:WL:e" Option
+while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:O:i:hA:P:K:N:WL:e" Option
 do
 	case ${Option} in
 		e )
@@ -1649,6 +1657,9 @@ do
 		;;
 		I )
 			pre_ALBUM_DISCID="${OPTARG}"
+		;;
+		O )
+			pre_ALBUM_COMMENT="${OPTARG}"
 		;;
 		l )
 			outCodecLevel=`echo ${OPTARG} | tr [:upper:] [:lower:]`
