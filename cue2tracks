@@ -200,6 +200,7 @@ tags_ALBUM_TRACKS=0
 tags_ALBUM_ZTRACKS=0
 tags_ALBUM_DISCID=""
 tags_ALBUM_NUMBER=""
+tags_ALBUM_NUMBERS=""
 tags_ALBUM_COMMENT=""
 tags_TRACK_TITLE=""
 tags_TRACK_PERFORMER=""
@@ -1292,6 +1293,9 @@ read_album_info() {
 	[ -n "${tags_ALBUM_NUMBER}" ] || tags_ALBUM_NUMBER=`grep -m 1 NUMBER "${cueFile}" | sed -r -e 's/.?*REM\ DISCNUMBER\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
 	[ -n "${tags_ALBUM_NUMBER}" ] && print_message "\tAlbum Disc Number = ${color_cyan}${tags_ALBUM_NUMBER}${color_default}"
 
+	tags_ALBUM_NUMBERS=`grep -m 1 TOTALDISCS "${cueFile}" | sed -r -e 's/.?*REM\ TOTALDISCS\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
+	[ -n "${tags_ALBUM_NUMBERS}" ] && print_message "\tAlbum Number of Discs = ${color_cyan}${tags_ALBUM_NUMBERS}${color_default}"
+
 	[ -n "${pre_ALBUM_DISCID}" ] && tags_ALBUM_DISCID=${pre_ALBUM_DISCID}
 	[ -n "${tags_ALBUM_DISCID}" ] || tags_ALBUM_DISCID=`grep -m 1 DISCID "${cueFile}" | sed -r -e 's/.?*REM\ DISCID\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
 	[ -n "${tags_ALBUM_DISCID}" ] && print_message "\tAlbum Disc ID = ${color_cyan}${tags_ALBUM_DISCID}${color_default}"
@@ -1376,6 +1380,16 @@ tag_m4a_track() {
     fi
 }
 
+tag_mp3_track() {
+    tag_Name="$1"
+    tag_Value="$2"
+
+    ${tag_MP3} -2 --${tag_Name} "${tag_Value}" "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_MP3}
+    fi
+}
 
 # function for track taging
 tag_track() {
@@ -1385,6 +1399,7 @@ tag_track() {
 			then
 				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_flac_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_FLAC} )
 				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_flac_track "DISCNUMBER" "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_FLAC} )
+				[ -n "${tags_ALBUM_NUMBERS}" ] && ( tag_flac_track "DISCTOTAL" "${tags_ALBUM_NUMBERS}" || return ${E_CANT_TAG_FLAC} )
 				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_flac_track "COMPOSER" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_FLAC} )
 				tag_flac_track "TITLE" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "ALBUM" "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_FLAC}
@@ -1414,24 +1429,22 @@ tag_track() {
 		"mp3" )
 			if [ ${onlyTest} -eq 0 ]
 			then
-				gn=`${tag_MP3} -L | grep -E -e "(.?*): ${tags_TRACK_GENRE}$" | awk '{print $1}' | sed -e 's/://g' -e 's/\ //g'`
-				[ ! -n "${gn}" ] && gn=12
-
-				${tag_MP3} -2 \
-				-t "${tags_TRACK_TITLE}" \
-				-A "${tags_ALBUM_TITLE}" \
-				-a "${tags_TRACK_PERFORMER}" \
-				-y "${tags_ALBUM_DATE}" \
-				-T "${tags_TRACK_ZNUMBER}/${tags_ALBUM_ZTRACKS}" \
-				-g "${gn}" \
-				-c "${tags_ALBUM_COMMENT}" \
-				 "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
-
-				if [ $? -ne 0 ]
+				tpos=""
+				if [ -n "${tags_ALBUM_NUMBER}" ] 
 				then
-					print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
-					return ${E_CANT_TAG_MP3}
+					tpos=${tags_ALBUM_NUMBER}
+					[ -n "${tags_ALBUM_NUMBERS}" ] && tpos="${tpos}/${tags_ALBUM_NUMBERS}"
 				fi
+
+				[ -n "${tpos}" ] && ( tag_mp3_track "TPOS" "${tpos}" || return ${E_CANT_TAG_MP3} )
+				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_mp3_track "TCOM" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_MP3} )
+				tag_mp3_track "TIT2" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_MP3}
+				tag_mp3_track "TALB" "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_MP3}
+				tag_mp3_track "TPE1" "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_MP3}
+				tag_mp3_track "TYER" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_MP3}
+				tag_mp3_track "TRCK" "${tags_TRACK_ZNUMBER}/${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_MP3}
+				tag_mp3_track "TCON" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_MP3}
+				tag_mp3_track "COMM" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_MP3}
 			fi
 		;;
 		"ogg" )
@@ -1439,6 +1452,7 @@ tag_track() {
 			then
 				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_ogg_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_OGG} )
 				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_ogg_track "DISCNUMBER" "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_OGG} )
+				[ -n "${tags_ALBUM_NUMBERS}" ] && ( tag_ogg_track "DISCTOTAL" "${tags_ALBUM_NUMBERS}" || return ${E_CANT_TAG_FLAC} )
 				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_ogg_track "COMPOSER" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_OGG} )
 				tag_ogg_track "TITLE" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_OGG}
 				tag_ogg_track "ALBUM" "${tags_ALBUM_TITLE}" || return ${E_CANT_TAG_OGG}
