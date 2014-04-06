@@ -68,6 +68,9 @@ E_CODEC_FFMPEG_NOT_FOUND=44
 E_CODEC_MPC_NOT_FOUND=45
 E_CODEC_TAK_NOT_FOUND=46
 
+E_TOOL_IM_NOT_FOUND=47
+E_CANT_CONVERT_PICTURE=48
+
 E_OPTERROR=65
 
 # --== VARIABLES ==--
@@ -89,6 +92,7 @@ tool_CP=""
 tool_ST=""
 tool_F=""
 tool_IC=""
+tool_IM=""
 
 tag_APE=""
 tag_FLAC=""
@@ -124,6 +128,7 @@ tool_CP_needed=1
 tool_ST_needed=1
 tool_F_needed=1
 tool_IC_needed=1
+tool_IM_needed=0
 
 tag_APE_needed=0
 tag_FLAC_needed=0
@@ -163,6 +168,10 @@ outExt="flac"
 inCodec=""
 inCodecParam=""
 inFile2WAV=0
+inPicture=""
+inPicQuality=95
+inPicSize="600x600"
+tempPicture=""
 
 fromCP=""
 locCP="ASCII"
@@ -387,6 +396,16 @@ Options:\n\
 \t-I <id>            : Set album disk ID\n\
 \t-N <number>        : Set album disc number\n\
 \t-O <comment>       : Set album comment\n\
+\n\
+\tCover art picture options:\n\
+\t-p <picture>       : Set album cover picture.\n\
+\t                     If not set - try to read from FLAC image file.\n\
+\tExternal pictures conversion only:\n\
+\t-j <quality>       : Set JPEG picture quality (95 - default).\n\
+\t                     0 - low, 100 - high\n\
+\t-r <width>x<height>: Set output picture size (600x600 - default).\n\
+\t                     For larger pictures only.\n\
+\n\
 \t-o <format string> : Set naming scheme for output files\
 " >&2
 	print_naming_scheme
@@ -684,6 +703,13 @@ search_tools() {
 		checktool iconv glibc
 		tool_IC=`gettool iconv`
 		[ -n "${tool_IC}" ] || return ${E_TOOL_IC_NOT_FOUND}
+	fi
+
+	if [ ${tool_IM_needed} -eq 1 ]
+	then
+		checktool convert imagemagick
+		tool_IM=`gettool convert`
+		[ -n "${tool_IM}" ] || return ${E_TOOL_IM_NOT_FOUND}
 	fi
 }
 
@@ -1324,6 +1350,41 @@ read_album_info() {
 	print_message "\tComment = ${color_cyan}${tags_ALBUM_COMMENT}${color_default}"
 }
 
+# function for preparing cover art picture for export
+prepare_picture() {
+
+    log_debug "prepare_picture(): tool_IM=${tool_IM}; inPicture=${inPicture}; inPicQuality=${inPicQuality}; inPicSize=${inPicSize}; tempPicture=${tempPicture}"
+
+	${tool_IM} "${inPicture}" -quality ${inPicQuality} -resize ${inPicSize} ${tempPicture}
+	if [ $? -ne 0 ]
+	then
+		print_error "Some error occured while conversion of picture '${color_cyan}${inPicture}${color_default}'!"
+		return ${E_CANT_CONVERT_PICTURE}
+	else
+		print_message "Picture successfully converted."
+	fi
+}
+
+#function for searching embedded pictures in input file
+search_picture() {
+    log_debug "search_flac_picture(): inFile=${inFile}; inFileDir=${inFileDir}; inCodec=${inCodec}; tempPicture=${tempPicture}"
+
+	if [ "${inCodec}" = "flac" ]
+	then
+		${tag_FLAC} --export-picture-to="${tempPicture}" "${inFileDir}/${inFile}" &>/dev/null
+		if [ $? -eq 0 ]
+		then
+			print_message "Picture successfully exported."
+		else
+			tempPicture=""
+			print_message "No picture suitable for export found."
+		fi
+	else
+		tempPicture=""
+		print_message "Input format is not supported."
+	fi
+}
+
 
 tag_flac_track() {
     tag_Name="$1"
@@ -1409,6 +1470,17 @@ tag_track() {
 				tag_flac_track "TRACKTOTAL" "${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_FLAC}
+
+				if [ -n "${tempPicture}" ]
+				then
+					${tag_FLAC} \
+					--import-picture-from="${tempPicture}" \
+					"${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" 2>&1 | tee -a "$log"
+					if [ $? -ne 0 ]; then
+						print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+						return ${E_CANT_TAG_FLAC}
+					fi
+				fi
 			fi
 		;;
 		"ape" | "wv" | "mpc" | "tak" )
@@ -1661,7 +1733,7 @@ run_section() {
 
 # --== MAIN PROGRAM ==--
 
-while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:O:i:hA:P:K:N:WL:e" Option
+while getopts ":CXRVc:f:o:dD:G:l:qsn:Q:M:B:I:O:i:p:j:r:hA:P:K:N:WL:e" Option
 do
 	case ${Option} in
 		e )
@@ -1762,6 +1834,18 @@ do
 		;;
 		i )
 			inFile=${OPTARG}
+		;;
+		p )
+			inPicture=${OPTARG}
+			tool_IM_needed=1
+		;;
+		j )
+			inPicQuality=`echo ${OPTARG} | sed -r 's/[^0-9\.]//g'`
+			[ `echo "${inPicQuality} < 1" | bc` -eq 1 ] && inPicQuality=1
+			[ `echo "${inPicQuality} > 100" | bc` -eq 1 ] && inPicQuality=100
+		;;
+		r )
+			inPicSize=${OPTARG}
 		;;
 		h )
 			print_help
@@ -1968,6 +2052,14 @@ fi
 
 run_section "Reading album info..." read_album_info
 [ ${inFile2WAV} -ne 0 ] && run_section "Recode to WAV..." recode_to_wav
+
+tempPicture="${tempDirName}/picture.jpg"
+if [ -n "${inPicture}" ]
+then
+	run_section "Preparing cover art picture..." prepare_picture
+else
+	run_section "Searching for cover art picture in input file..." search_picture
+fi
 
 if [ $logDebug -eq 0 ]; then
     run_section "Start splitting..." split_image
