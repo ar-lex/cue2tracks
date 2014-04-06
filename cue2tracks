@@ -197,6 +197,7 @@ tags_ALBUM_COMPOSER=""
 tags_ALBUM_GENRE=""
 tags_ALBUM_DATE=""
 tags_ALBUM_TRACKS=0
+tags_ALBUM_ZTRACKS=0
 tags_ALBUM_DISCID=""
 tags_ALBUM_NUMBER=""
 tags_ALBUM_COMMENT=""
@@ -1288,6 +1289,7 @@ read_album_info() {
 	print_message "\tAlbum Genre = ${color_cyan}${tags_ALBUM_GENRE}${color_default}"
 
 	[ -n "${pre_ALBUM_NUMBER}" ] && tags_ALBUM_NUMBER=${pre_ALBUM_NUMBER}
+	[ -n "${tags_ALBUM_NUMBER}" ] || tags_ALBUM_NUMBER=`grep -m 1 NUMBER "${cueFile}" | sed -r -e 's/.?*REM\ DISCNUMBER\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
 	[ -n "${tags_ALBUM_NUMBER}" ] && print_message "\tAlbum Disc Number = ${color_cyan}${tags_ALBUM_NUMBER}${color_default}"
 
 	[ -n "${pre_ALBUM_DISCID}" ] && tags_ALBUM_DISCID=${pre_ALBUM_DISCID}
@@ -1304,7 +1306,13 @@ read_album_info() {
 	print_message "\tAlbum Date = ${color_cyan}${tags_ALBUM_DATE}${color_default}"
 
 	tags_ALBUM_TRACKS=`${tool_CP} -d %N "${cueFile}"`
-	print_message "\tNumber of Tracks = ${color_cyan}${tags_ALBUM_TRACKS}${color_default}"
+	if (( $tags_ALBUM_TRACKS < 10 ))
+	then
+		tags_ALBUM_ZTRACKS="0$tags_ALBUM_TRACKS"
+	else
+		tags_ALBUM_ZTRACKS="$tags_ALBUM_TRACKS"
+	fi
+	print_message "\tNumber of Tracks = ${color_cyan}${tags_ALBUM_ZTRACKS}${color_default}"
 
 	[ -n "${pre_ALBUM_COMMENT}" ] && tags_ALBUM_COMMENT=${pre_ALBUM_COMMENT}
 	[ -n "${tags_ALBUM_COMMENT}" ] || tags_ALBUM_COMMENT=`grep -m 1 COMMENT "${cueFile}" | sed -r -e 's/.?*REM\ COMMENT\ (.?*)/\1/g' -e 's:"::g' | tr -d [:cntrl:]`
@@ -1383,6 +1391,7 @@ tag_track() {
 				tag_flac_track "ARTIST" "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "DATE" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "TRACKNUMBER" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_FLAC}
+				tag_flac_track "TRACKTOTAL" "${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_FLAC}
 			fi
@@ -1413,9 +1422,9 @@ tag_track() {
 				-A "${tags_ALBUM_TITLE}" \
 				-a "${tags_TRACK_PERFORMER}" \
 				-y "${tags_ALBUM_DATE}" \
-				-T "${tags_TRACK_ZNUMBER}" \
+				-T "${tags_TRACK_ZNUMBER}/${tags_ALBUM_ZTRACKS}" \
 				-g "${gn}" \
-				-c "${NAME} v${VER}" \
+				-c "${tags_ALBUM_COMMENT}" \
 				 "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
 
 				if [ $? -ne 0 ]
@@ -1436,6 +1445,7 @@ tag_track() {
 				tag_ogg_track "ARTIST" "${tags_TRACK_PERFORMER}" || return ${E_CANT_TAG_OGG}
 				tag_ogg_track "DATE" "${tags_ALBUM_DATE}" || return ${E_CANT_TAG_OGG}
 				tag_ogg_track "TRACKNUMBER" "${tags_TRACK_ZNUMBER}" || return ${E_CANT_TAG_OGG}
+				tag_ogg_track "TRACKTOTAL" "${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_FLAC}
 				tag_ogg_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_OGG}
 				tag_ogg_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_OGG}
 			fi
