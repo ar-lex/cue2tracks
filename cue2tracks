@@ -610,6 +610,7 @@ check_inCodec() {
 	case "${inCodec}" in
 		"flac" )
 			codec_FLAC_needed=1
+                        [ -z "${inPicture}" ] && tag_FLAC_needed=1
 			codec_IN="flac"
 		;;
 		"ape" )
@@ -860,8 +861,8 @@ search_tagers() {
 
 	if [ ${tag_MP3_needed} -eq 1 ]
 	then
-		checktool id3v2 id3v2
-		tag_MP3=`gettool id3v2`
+		checktool eyeD3 python-eyed3
+		tag_MP3=`gettool eyeD3`
 		[ -n "${tag_MP3}" ] || return ${E_TAG_MP3_NOT_FOUND}
 	fi
 
@@ -1355,7 +1356,7 @@ prepare_picture() {
 
     log_debug "prepare_picture(): tool_IM=${tool_IM}; inPicture=${inPicture}; inPicQuality=${inPicQuality}; inPicSize=${inPicSize}; tempPicture=${tempPicture}"
 
-	${tool_IM} "${inPicture}" -quality ${inPicQuality} -resize ${inPicSize} ${tempPicture}
+	${tool_IM} "${inPicture}" -quality ${inPicQuality} -resize "${inPicSize}>" ${tempPicture}
 	if [ $? -ne 0 ]
 	then
 		print_error "Some error occured while conversion of picture '${color_cyan}${inPicture}${color_default}'!"
@@ -1367,7 +1368,7 @@ prepare_picture() {
 
 #function for searching embedded pictures in input file
 search_picture() {
-    log_debug "search_flac_picture(): inFile=${inFile}; inFileDir=${inFileDir}; inCodec=${inCodec}; tempPicture=${tempPicture}"
+    log_debug "search_picture(): inFile=${inFile}; inFileDir=${inFileDir}; inCodec=${inCodec}; tempPicture=${tempPicture}"
 
 	if [ "${inCodec}" = "flac" ]
 	then
@@ -1445,7 +1446,23 @@ tag_mp3_track() {
     tag_Name="$1"
     tag_Value="$2"
 
-    ${tag_MP3} -2 --${tag_Name} "${tag_Value}" "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    ${tag_MP3} -2 --set-text-frame="${tag_Name}:${tag_Value}" "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_MP3}
+    fi
+}
+
+pic_flac_track() {
+    ${tag_FLAC} --import-picture-from="${tempPicture}" "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" 2>&1 | tee -a "$log"
+    if [ $? -ne 0 ]; then
+        print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
+        return ${E_CANT_TAG_FLAC}
+    fi
+}
+
+pic_mp3_track() {
+    ${tag_MP3} --add-image ${tempPicture}:FRONT_COVER "${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" &>/dev/null
     if [ $? -ne 0 ]; then
         print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
         return ${E_CANT_TAG_MP3}
@@ -1470,17 +1487,7 @@ tag_track() {
 				tag_flac_track "TRACKTOTAL" "${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_FLAC}
-
-				if [ -n "${tempPicture}" ]
-				then
-					${tag_FLAC} \
-					--import-picture-from="${tempPicture}" \
-					"${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}" 2>&1 | tee -a "$log"
-					if [ $? -ne 0 ]; then
-						print_error "Cant tag '${color_cyan}${tempDirName}/${tags_TRACK_ZNUMBER}.${outExt}${color_default}'"
-						return ${E_CANT_TAG_FLAC}
-					fi
-				fi
+				[ -n "${tempPicture}" ] && pic_flac_track || return ${E_CANT_TAG_FLAC}
 			fi
 		;;
 		"ape" | "wv" | "mpc" | "tak" )
@@ -1517,6 +1524,7 @@ tag_track() {
 				tag_mp3_track "TRCK" "${tags_TRACK_ZNUMBER}/${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_MP3}
 				tag_mp3_track "TCON" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_MP3}
 				tag_mp3_track "COMM" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_MP3}
+				[ -n "${tempPicture}" ] && pic_mp3_track || return ${E_CANT_TAG_MP3}
 			fi
 		;;
 		"ogg" )
