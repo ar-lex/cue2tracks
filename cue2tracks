@@ -1475,6 +1475,7 @@ tag_track() {
 		"flac" | "flake" )
 			if [ ${onlyTest} -eq 0 ]
 			then
+				[ -n "${tempPicture}" ] && ( pic_flac_track || return ${E_CANT_TAG_FLAC} )
 				[ -n "${tags_ALBUM_DISCID}" ] && ( tag_flac_track "DISCID" "${tags_ALBUM_DISCID}" || return ${E_CANT_TAG_FLAC} )
 				[ -n "${tags_ALBUM_NUMBER}" ] && ( tag_flac_track "DISCNUMBER" "${tags_ALBUM_NUMBER}" || return ${E_CANT_TAG_FLAC} )
 				[ -n "${tags_ALBUM_NUMBERS}" ] && ( tag_flac_track "DISCTOTAL" "${tags_ALBUM_NUMBERS}" || return ${E_CANT_TAG_FLAC} )
@@ -1487,7 +1488,6 @@ tag_track() {
 				tag_flac_track "TRACKTOTAL" "${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "GENRE" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_FLAC}
 				tag_flac_track "COMMENT" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_FLAC}
-				[ -n "${tempPicture}" ] && pic_flac_track || return ${E_CANT_TAG_FLAC}
 			fi
 		;;
 		"ape" | "wv" | "mpc" | "tak" )
@@ -1514,7 +1514,7 @@ tag_track() {
 					tpos=${tags_ALBUM_NUMBER}
 					[ -n "${tags_ALBUM_NUMBERS}" ] && tpos="${tpos}/${tags_ALBUM_NUMBERS}"
 				fi
-
+				[ -n "${tempPicture}" ] && ( pic_mp3_track || return ${E_CANT_TAG_MP3} )
 				[ -n "${tpos}" ] && ( tag_mp3_track "TPOS" "${tpos}" || return ${E_CANT_TAG_MP3} )
 				[ -n "${tags_TRACK_COMPOSER}" ] && ( tag_mp3_track "TCOM" "${tags_TRACK_COMPOSER}" || return ${E_CANT_TAG_MP3} )
 				tag_mp3_track "TIT2" "${tags_TRACK_TITLE}" || return ${E_CANT_TAG_MP3}
@@ -1524,7 +1524,6 @@ tag_track() {
 				tag_mp3_track "TRCK" "${tags_TRACK_ZNUMBER}/${tags_ALBUM_ZTRACKS}" || return ${E_CANT_TAG_MP3}
 				tag_mp3_track "TCON" "${tags_TRACK_GENRE}" || return ${E_CANT_TAG_MP3}
 				tag_mp3_track "COMM" "${tags_ALBUM_COMMENT}" || return ${E_CANT_TAG_MP3}
-				[ -n "${tempPicture}" ] && pic_mp3_track || return ${E_CANT_TAG_MP3}
 			fi
 		;;
 		"ogg" )
