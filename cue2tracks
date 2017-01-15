@@ -1612,7 +1612,7 @@ process_tracks() {
 
 	[[ "${tags_ALBUM_TRACKS}" == "" || "${tags_ALBUM_TRACKS}" == "0" ]] && return ${E_WRONG_NUM_TRACKS}
 
-	if [ ${tags_ALBUM_TRACKS} != ${totalTracks} ]
+	if [[ ${tags_ALBUM_TRACKS} != ${totalTracks} ]]
 	then
 		for track in $(ls ${tempDirName}/*.${outExt})
 		do
